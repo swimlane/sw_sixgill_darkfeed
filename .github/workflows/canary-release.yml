@@ -1,0 +1,144 @@
+name: "/canary-release"
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write # for checkout & releases
+  pull-requests: write # for comments
+  packages: write # for publish
+
+env:
+  sdk_version: "latest"
+  APPHUB_URL: "https://apphub-dev.swimlane.io"
+
+jobs:
+  canary-release:
+    name: canary-release
+    runs-on: self-hosted
+    if: |
+      github.event_name == 'issue_comment' &&
+      (github.event.comment.author_association == 'MEMBER' || 
+       github.event.comment.author_association == 'OWNER' || 
+       github.event.comment.author_association == 'CONTRIBUTOR' || 
+       github.event.comment.author_association == 'COLLABORATOR') &&
+      startsWith(github.event.comment.body, '/canary-release')
+    steps:
+      - name: get pr information
+        uses: actions/github-script@v4
+        id: pr
+        with:
+          script: |
+            const request = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            }
+            core.info(`Getting PR #${request.pull_number} from ${request.owner}/${request.repo}`)
+            try {
+              const result = await github.pulls.get(request)
+              core.info(`Got PR: ${JSON.stringify(result.data)}`)
+              return result.data
+            } catch (err) {
+              core.setFailed(`Request failed with error ${err}`)
+            }
+
+      - name: setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install swsdk
+        run: |
+          npm install -g @swimlane/swimlane-sdk@${{ env.sdk_version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install swsdk plugins
+        run: |
+          swsdk plugins:install @swimlane/swsdk-apphub@${{ env.sdk_version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: "5.0.x"
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.9.9
+        with:
+          versionSpec: "5.x"
+
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ fromJSON(steps.pr.outputs.result).head.ref }}
+          repository: ${{ fromJSON(steps.pr.outputs.result).head.repo.full_name }}
+          fetch-depth: 0
+
+      - name: Load package info
+        id: pjson
+        uses: zoexx/github-action-json-file-properties@release
+        with:
+          file_path: "package.json"
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0.9.9
+        with:
+          useConfigFile: true
+          additionalArguments: "/b ${{ fromJSON(steps.pr.outputs.result).head.ref }} /overrideconfig next-version=${{steps.pjson.outputs.version}}"
+
+      - name: Create Folder
+        run: mkdir output
+
+      # - name: Lint Integration
+      #   run: |
+      #     swsdk integration:lint
+
+      - name: Validate Integration
+        run: |
+          swsdk integration:validate -v=${{steps.pjson.outputs.python_runtime}}
+
+      - name: Build Integration
+        run: |
+          swsdk integration:build -v=${{steps.pjson.outputs.python_runtime}}
+
+      - name: Push to AppHub
+        if: ${{steps.pjson.outputs.private != 'true'}}
+        run: |
+          find output -name '*.swimbundle' -exec sh -c 'swsdk apphub:push -u ${{ secrets.APPHUB_DEV_USERNAME }} -p ${{ secrets.APPHUB_DEV_PASSWORD }} --log-level debug --base-url ${{env.APPHUB_URL}} -f "$0"' {} \;
+
+      - name: Create Dev Bundle
+        if: ${{ steps.gitversion.outputs.preReleaseLabel != '' }}
+        run: find output -name '*.swimbundle' -exec sh -c 'mv "$0" "${0%.swimbundle}.dev.swimbundle"' {} \;
+
+      - name: Archive integration
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration
+          path: |
+            output/**/*.swimbundle
+
+      - uses: actions/github-script@v4
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🎉 Canary Release. You can install canary version via https://github.com/${{ github.repository }}/releases/tag/${{ steps.gitversion.outputs.semVer }}'
+            })
+
+      - name: Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          title: "${{ steps.gitversion.outputs.semVer}}"
+          automatic_release_tag: "${{ steps.gitversion.outputs.semVer}}"
+          prerelease: ${{ steps.gitversion.outputs.preReleaseLabel != '' }}
+          files: |
+            CHANGELOG.md
+            output/**/*.swimbundle
+          repo_token: ${{ secrets.GITHUB_TOKEN }}

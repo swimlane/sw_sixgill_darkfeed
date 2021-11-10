@@ -1,0 +1,10 @@
+assembly-informational-format: "{Major}.{Minor}.{Patch}{PreReleaseTagWithDash}-{ShortSha}"
+branches:
+  master:
+    regex: ^master$|^main$
+  feature:
+    tag: beta
+    regex: ^features?[/-]|^SC[/-]
+  pull-request:
+    regex: ^(pull|pull\-requests|pr)[/-]
+    tag: beta

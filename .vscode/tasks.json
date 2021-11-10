@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Debug Integration",
+      "type": "shell",
+      "command": "swsdk",
+      "args": [
+        "integration:run",
+        "-n",
+        "${fileBasenameNoExtension}",
+        "--debug",
+        "code"
+      ],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "swsdk",
+        "fileLocation": "absolute",
+        "applyTo": "openDocuments",
+        "source": "python",
+        "pattern": {
+          "regexp": "(Error):\\s+(.*):\\s+(.*)$",
+          "kind": "file",
+          "severity": 0,
+          "message": 1,
+          "file": 2
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting run",
+          "endsPattern": ".*Waiting for debugger to attach.*"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+# All code is owned by the surf team
+* @swimlane/surf
+
+# All documentation is owned by tech-pubs
+
+*.json @swimlane/tech-writers
+*.md @swimlane/tech-writers
+doc_images/* @swimlane/tech-writers

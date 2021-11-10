@@ -1,0 +1,119 @@
+name: publish
+on:
+  # When Release Pull Request is merged
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+
+permissions:
+  contents: write # for checkout and tag
+  pull-requests: write # for comments
+  packages: write # for publish
+
+env:
+  sdk_version: "latest"
+  APPHUB_URL: "https://apphub.swimlane.com"
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Set AppHub Variables
+        run: |
+
+      - name: Install swsdk
+        run: |
+          npm install -g @swimlane/swimlane-sdk@${{ env.sdk_version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install swsdk plugins
+        run: |
+          swsdk plugins:install @swimlane/swsdk-apphub@${{ env.sdk_version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.9.9
+        with:
+          versionSpec: "5.x"
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Load package info
+        id: pjson
+        uses: zoexx/github-action-json-file-properties@release
+        with:
+          file_path: "package.json"
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0.9.9
+        with:
+          useConfigFile: true
+          additionalArguments: "/overrideconfig next-version=${{steps.pjson.outputs.version}}"
+
+      - name: Create Folder
+        run: mkdir output
+
+      # - name: Lint Integration
+      #   run: |
+      #     swsdk integration:lint
+
+      - name: Validate Integration
+        run: |
+          swsdk integration:validate -v=${{steps.pjson.outputs.python_runtime}}
+
+      - name: Build Integration
+        run: |
+          swsdk integration:build  -v=${{steps.pjson.outputs.python_runtime}}
+
+      - name: Push to AppHub
+        if: ${{steps.pjson.outputs.private != 'true'}}
+        run: |
+          find output -name '*.swimbundle' -exec sh -c 'swsdk apphub:push -u ${{ secrets.APPHUB_USERNAME }} -p ${{ secrets.APPHUB_PASSWORD }} --base-url ${{env.APPHUB_URL}} -f "$0"' {} \;
+
+      - name: Archive integration
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration
+          path: |
+            output/**/*.swimbundle
+
+      - name: Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          title: "${{ steps.gitversion.outputs.semVer}}"
+          automatic_release_tag: "${{ steps.gitversion.outputs.semVer}}"
+          prerelease: false
+          files: |
+            CHANGELOG.md
+            output/**/*.swimbundle
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/github-script@v4
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'https://github.com/${{ github.repository }}/releases/tag/${{ steps.gitversion.outputs.semVer }} is released 🎉'
+            })
+      - name: Clean up old pre-releases
+        run: |
+          git tag -l | awk '/^(${{ steps.gitversion.outputs.semVer }}-.*)$/ {print $1}' | xargs git tag -d
+
+          git ls-remote --tags origin | awk '/^(.*)(\s+)(.*${{ steps.gitversion.outputs.semVer }}+-)[^\^]+$/ {print ":" $2}' | xargs git push origin

@@ -1,0 +1,89 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write # for checkout and tag
+
+env:
+  sdk_version: "latest"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install swsdk
+        run: |
+          npm install -g @swimlane/swimlane-sdk@${{ env.sdk_version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install swsdk plugins
+        run: |
+          swsdk plugins:install @swimlane/swsdk-admin@${{ env.sdk_version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.9.9
+        with:
+          versionSpec: "5.x"
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Load package info
+        id: pjson
+        uses: zoexx/github-action-json-file-properties@release
+        with:
+          file_path: "package.json"
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0.9.9
+        with:
+          useConfigFile: true
+          additionalArguments: "/overrideconfig next-version=${{steps.pjson.outputs.version}}"
+
+      - name: Python Version
+        id: python_version
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: "package.json"
+          prop_path: "python_runtime"
+
+      - name: Create Folder
+        run: mkdir output
+
+      # - name: Lint Integration
+      #   run: |
+      #     swsdk integration:lint
+
+      - name: Validate Integration
+        run: |
+          swsdk integration:validate -v=${{steps.pjson.outputs.python_runtime}}
+
+      - name: Build Integration
+        run: |
+          swsdk integration:build -v=${{steps.pjson.outputs.python_runtime}}
+
+      - name: Create Dev Bundle
+        if: ${{ steps.gitversion.outputs.preReleaseLabel != '' }}
+        run: find output -name '*.swimbundle' -exec sh -c 'mv "$0" "${0%.swimbundle}.dev.swimbundle"' {} \;
+
+      - name: Archive integration
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration
+          path: |
+            output/**/*.swimbundle
