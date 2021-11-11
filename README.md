@@ -33,7 +33,3 @@ The task for this plugin doesn't requires inputs.
 ## Notes
 
 Cybersixgill Support - https://support.cybersixgill.com
-
-This plugin was last tested against product version: !*CHANGEME*!.
-
-This plugin was last tested against product version: !*CHANGEME*!.

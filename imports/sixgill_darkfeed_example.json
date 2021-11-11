@@ -20,7 +20,6 @@
       "description": "Cybersixgill Darkfeed Description",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "cybersixgill_actor": {
@@ -28,7 +27,6 @@
       "description": "Cybersixgill Darkfeed Actor",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "cybersixgill_confidence": {
@@ -36,7 +34,6 @@
       "description": "Cybersixgill Darkfeed Confidence",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "cybersixgill_feed_name": {
@@ -44,7 +41,6 @@
       "description": "Cybersixgill Darkfeed Name",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "cybersixgill_post_id": {
@@ -52,7 +48,6 @@
       "description": "Cybersixgill Darkfeed Post Id",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "cybersixgill_post_title": {
@@ -60,7 +55,6 @@
       "description": "Cybersixgill Darkfeed Post Title",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "cybersixgill_severity": {
@@ -68,7 +62,6 @@
       "description": "Cybersixgill Darkfeed Severity",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "cybersixgill_source": {
@@ -76,7 +69,6 @@
       "description": "Cybersixgill Darkfeed Source",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "cybersixgill_indicator_id": {
@@ -84,7 +76,6 @@
       "description": "Cybersixgill Darkfeed Indicator Id",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "labels": {
@@ -92,7 +83,6 @@
       "description": "Cybersixgill Darkfeed Labels",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 5
     },
     "created": {
@@ -100,7 +90,6 @@
       "description": "Cybersixgill Darkfeed Created Date",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "valid_from": {
@@ -108,7 +97,6 @@
       "description": "Cybersixgill Darkfeed Valid From",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "indicator_type": {
@@ -116,7 +104,6 @@
       "description": "Cybersixgill Darkfeed Indicator Type",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "indicator_value": {
@@ -124,7 +111,6 @@
       "description": "Cybersixgill Darkfeed Indicator Value",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "virus_total_positive_rate": {
@@ -132,7 +118,6 @@
       "description": "Virus Total Positive Rate",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "virus_total_url": {
@@ -140,7 +125,6 @@
       "description": "Virus Total Url",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "mitre_descriptions": {
@@ -148,7 +132,6 @@
       "description": "Mitre Descriptions",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "mitre_tactics": {
@@ -156,7 +139,6 @@
       "description": "Mitre Tactics",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "mitre_tactic_ids": {
@@ -164,7 +146,6 @@
       "description": "Mitre Tactic Ids",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "mitre_tactic_urls": {
@@ -172,7 +153,6 @@
       "description": "Mitre Tactic Urls",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "mitre_techniques": {
@@ -180,7 +160,6 @@
       "description": "Mitre Techniques",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "mitre_technique_ids": {
@@ -188,7 +167,6 @@
       "description": "Mitre Technique Ids",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "mitre_technique_urls": {
@@ -196,7 +174,6 @@
       "description": "Mitre Technique Urls",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     },
     "language": {
@@ -204,7 +181,6 @@
       "description": "Language",
       "example": "",
       "required": false,
-      "unique": false,
       "type": 1
     }
   },
