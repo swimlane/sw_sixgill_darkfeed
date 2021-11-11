@@ -3,11 +3,11 @@ from json import load
 from six import iteritems
 
 
-def convert(input):
+def convert(_input):
     if isinstance(input, dict):
-        return {convert(k): convert(v) for k, v in iteritems(input)}
+        return {convert(k): convert(v) for k, v in iteritems(_input)}
     elif isinstance(input, list):
-        return [convert(element) for element in input]
+        return [convert(element) for element in _input]
     elif isinstance(input, bytes):
         return input.decode()
     else:
