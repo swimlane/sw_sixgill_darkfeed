@@ -39,7 +39,7 @@
       "name": "JSON",
       "description": "y",
       "required": true,
-      "type": "UNDEFINED",
+      "type": 1,
       "example": "[object Object]"
     }
   },
