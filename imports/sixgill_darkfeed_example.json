@@ -6,7 +6,43 @@
   "actionType": "CybersixgillDarkfeedExample",
   "assetDependencyType": "CybersixgillDarkfeed",
   "assetDependencyVersion": "1.1.1",
-  "inputParameters": {},
+  "inputParameters": {
+    "camelCaseItem": {
+      "name": "Camel Case Item",
+      "description": "y",
+      "required": true,
+      "type": 1,
+      "example": "hello"
+    },
+    "snake_case": {
+      "name": "Snake Case",
+      "description": "y",
+      "required": true,
+      "type": 6,
+      "example": "7"
+    },
+    "TileCase": {
+      "name": "Tile Case",
+      "description": "y",
+      "required": true,
+      "type": 7,
+      "example": "true"
+    },
+    "capitalize_dns": {
+      "name": "Capitalize DNS",
+      "description": "y",
+      "required": true,
+      "type": 5,
+      "example": "1,2,3"
+    },
+    "json": {
+      "name": "JSON",
+      "description": "y",
+      "required": true,
+      "type": "UNDEFINED",
+      "example": "[object Object]"
+    }
+  },
   "availableOutputTypes": [
     "email",
     "insertUpdateRecord",
