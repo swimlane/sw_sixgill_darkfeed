@@ -13,8 +13,8 @@
     "sw_cybersixgill_darkfeed"
   ],
   "name": "sw_cybersixgill_darkfeed",
-  "supported_swimlane_version": ">=10.0.0",
+  "supported_swimlane_version": "<10.5.0",
   "python_version": "3.6",
-  "python_runtime": "3.7",
+  "python_runtime": "3.6",
   "private": false
 }
