@@ -6,7 +6,7 @@ from swimlane import Swimlane
 from sixgill.sixgill_constants import FeedStream
 
 
-class SixgillDarkfeedBaseClass(object):
+class SixgillDarkfeedBaseClass:
     def __init__(self, context):
         self.client_id = context.asset.get('client_id', '')
         self.client_secret = context.asset.get('client_secret', '')
