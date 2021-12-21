@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.1.2 - 2021-12-21
+* !*CHANGEME*!
+* Product version tested against: !*CHANGEME*!
+
 ## 1.1.1 - 2021-11-11
 * Resized logo
 

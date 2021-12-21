@@ -3,9 +3,6 @@ import re
 
 class SwMain(SixgillAPIRequests, SwimlaneAPIRequests):
 
-    def __init__(self, context):
-        super(SwMain, self).__init__(context)
-
     def execute(self):
         """
         This method results parses darkfeed data from cybersixgill as per swimlane
@@ -42,12 +39,11 @@ class SwMain(SixgillAPIRequests, SwimlaneAPIRequests):
                 temp_indicator_type = indicator_type
             indicator_value = each_indicator.get('Value')
 
-            raw_response = self.parse_swimlane_fields(indicator, post_id, temp_indicator_type, indicator_value,
-                                                      dark_feed)
+            raw_response = self.parse_swimlane_fields(indicator, post_id, temp_indicator_type, indicator_value)
 
             dark_feed.append(raw_response)
 
-    def parse_swimlane_fields(self, indicator, post_id, indicator_type, indicator_value, dark_feed):
+    def parse_swimlane_fields(self, indicator, post_id, indicator_type, indicator_value):
 
         virustotal_positive_rate = self.extract_external_reference_field(indicator, 'VirusTotal', 'positive_rate')
         virustotal_url = self.extract_external_reference_field(indicator, 'VirusTotal', 'url')
