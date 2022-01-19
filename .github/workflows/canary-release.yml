@@ -15,8 +15,12 @@ env:
 jobs:
   canary-release:
     name: canary-release
+    strategy:
+      matrix:
+        PYTHON_VERSION: [3.6, 3.7]
     runs-on: self-hosted
     if: |
+      github.event.repository.is_template == false &&
       github.event_name == 'issue_comment' &&
       (github.event.comment.author_association == 'MEMBER' || 
        github.event.comment.author_association == 'OWNER' || 
@@ -93,17 +97,24 @@ jobs:
       - name: Create Folder
         run: mkdir output
 
-      # - name: Lint Integration
-      #   run: |
-      #     swsdk integration:lint
-
       - name: Validate Integration
         run: |
-          swsdk integration:validate -v=${{steps.pjson.outputs.python_runtime}}
+          swsdk integration:validate -v=${{matrix.PYTHON_VERSION}}
+
+      - name: Update versions
+        id: updateVersions
+        run: |
+          swsdk integration:update --version ${{ steps.gitversion.outputs.semVer}}
 
       - name: Build Integration
         run: |
-          swsdk integration:build -v=${{steps.pjson.outputs.python_runtime}}
+          swsdk integration:build -v=${{matrix.PYTHON_VERSION}}
+
+      - name: Delete existing
+        if: ${{steps.pjson.outputs.private != 'true'}}
+        run: |
+          swsdk apphub:delete -u ${{ secrets.APPHUB_DEV_USERNAME }} -p ${{ secrets.APPHUB_DEV_PASSWORD }} --base-url ${{env.APPHUB_URL}} --owner ${{steps.pjson.outputs.author}} --name ${{steps.pjson.outputs.name}} --version ${{ steps.gitversion.outputs.semVer }}
+        continue-on-error: true
 
       - name: Push to AppHub
         if: ${{steps.pjson.outputs.private != 'true'}}

@@ -4,6 +4,7 @@ output/
 dist/
 .idea
 data/
+.DS_Store
 
 __pycache__/
 *.py[cod]
@@ -11,3 +12,5 @@ __pycache__/
 
 .czrc
 .python-version
+
+data/

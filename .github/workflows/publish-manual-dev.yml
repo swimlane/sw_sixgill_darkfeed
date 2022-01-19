@@ -1,23 +1,24 @@
-name: ci
-
+name: "publish-manual-dev"
 on:
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write # for checkout and tag
+  pull-requests: write # for comments
+  packages: write # for publish
 
 env:
-  sdk_version: "latest"
+  sdk_version: "next"
+  APPHUB_URL: "https://apphub-dev.swimlane.io"
 
 jobs:
-  build:
+  publish-manual-dev:
     if: github.event.repository.is_template == false
+    name: publish-manual-dev
     strategy:
       matrix:
         PYTHON_VERSION: [3.6, 3.7]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: setup Node
         uses: actions/setup-node@v2
@@ -33,14 +34,9 @@ jobs:
 
       - name: Install swsdk plugins
         run: |
-          swsdk plugins:install @swimlane/swsdk-admin@${{ env.sdk_version }}
+          swsdk plugins:install @swimlane/swsdk-apphub@${{ env.sdk_version }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0.9.9
-        with:
-          versionSpec: "5.x"
 
       - uses: actions/checkout@v2
         with:
@@ -52,19 +48,8 @@ jobs:
         with:
           file_path: "package.json"
 
-      - name: Determine Version
-        id: gitversion
-        uses: gittools/actions/gitversion/execute@v0.9.9
-        with:
-          useConfigFile: true
-          additionalArguments: "/overrideconfig next-version=${{steps.pjson.outputs.version}}"
-
       - name: Create Folder
         run: mkdir output
-
-      # - name: Lint Integration
-      #   run: |
-      #     swsdk integration:lint
 
       - name: Validate Integration
         run: |
@@ -74,6 +59,25 @@ jobs:
         run: |
           swsdk integration:build -v=${{matrix.PYTHON_VERSION}}
 
-      - name: Create Dev Bundle
-        if: ${{ steps.gitversion.outputs.preReleaseLabel != '' }}
-        run: find output -name '*.swimbundle' -exec sh -c 'mv "$0" "${0%.swimbundle}.dev.swimbundle"' {} \;
+      - name: Push to AppHub
+        if: ${{steps.pjson.outputs.private != 'true'}}
+        run: |
+          find output -name '*.swimbundle' -exec sh -c 'swsdk apphub:push -u ${{ secrets.APPHUB_DEV_USERNAME }} -p ${{ secrets.APPHUB_DEV_PASSWORD }} --log-level debug --base-url ${{env.APPHUB_URL}} -f "$0"' {} \;
+
+      - name: Archive integration
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration
+          path: |
+            output/**/*.swimbundle
+
+      - name: Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          title: "${{ steps.pjson.outputs.version }}"
+          automatic_release_tag: "${{ steps.pjson.outputs.version }}"
+          prerelease: true
+          files: |
+            CHANGELOG.md
+            output/**/*.swimbundle
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
