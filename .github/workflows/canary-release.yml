@@ -19,6 +19,8 @@ jobs:
       matrix:
         PYTHON_VERSION: [3.6, 3.7]
     runs-on: self-hosted
+    outputs:
+      version: ${{ steps.gitversion.outputs.semVer }}
     if: |
       github.event.repository.is_template == false &&
       github.event_name == 'issue_comment' &&
@@ -110,16 +112,10 @@ jobs:
         run: |
           swsdk integration:build -v=${{matrix.PYTHON_VERSION}}
 
-      - name: Delete existing
-        if: ${{steps.pjson.outputs.private != 'true'}}
-        run: |
-          swsdk apphub:delete -u ${{ secrets.APPHUB_DEV_USERNAME }} -p ${{ secrets.APPHUB_DEV_PASSWORD }} --base-url ${{env.APPHUB_URL}} --owner ${{steps.pjson.outputs.author}} --name ${{steps.pjson.outputs.name}} --version ${{ steps.gitversion.outputs.semVer }}
-        continue-on-error: true
-
       - name: Push to AppHub
         if: ${{steps.pjson.outputs.private != 'true'}}
         run: |
-          find output -name '*.swimbundle' -exec sh -c 'swsdk apphub:push -u ${{ secrets.APPHUB_DEV_USERNAME }} -p ${{ secrets.APPHUB_DEV_PASSWORD }} --log-level debug --base-url ${{env.APPHUB_URL}} -f "$0"' {} \;
+          find output -name '*.swimbundle' -exec sh -c 'swsdk apphub:push -u "${{ secrets.APPHUB_DEV_USERNAME }}" -p "${{ secrets.APPHUB_DEV_PASSWORD }}" --log-level debug --base-url ${{env.APPHUB_URL}} -f "$0"' {} \;
 
       - name: Create Dev Bundle
         if: ${{ steps.gitversion.outputs.preReleaseLabel != '' }}
@@ -132,7 +128,29 @@ jobs:
           path: |
             output/**/*.swimbundle
 
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: canary-release
+    name: "publish-release"
+    steps:
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v2.1.0
+
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: Release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          title: "${{ needs.canary-release.outputs.version }}"
+          automatic_release_tag: "${{ needs.canary-release.outputs.version  }}"
+          prerelease: true
+          files: |
+            integration/**/*.swimbundle
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/github-script@v4
+        if: github.context.issue.number > 0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -140,16 +158,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '🎉 Canary Release. You can install canary version via https://github.com/${{ github.repository }}/releases/tag/${{ steps.gitversion.outputs.semVer }}'
+              body: '🎉 Canary Release. You can install canary version via https://github.com/${{ github.repository }}/releases/tag/${{ needs.canary-release.outputs.version }}'
             })
-
-      - name: Release
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          title: "${{ steps.gitversion.outputs.semVer}}"
-          automatic_release_tag: "${{ steps.gitversion.outputs.semVer}}"
-          prerelease: ${{ steps.gitversion.outputs.preReleaseLabel != '' }}
-          files: |
-            CHANGELOG.md
-            output/**/*.swimbundle
-          repo_token: ${{ secrets.GITHUB_TOKEN }}

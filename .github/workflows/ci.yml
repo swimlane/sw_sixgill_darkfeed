@@ -31,12 +31,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Install swsdk plugins
-        run: |
-          swsdk plugins:install @swimlane/swsdk-admin@${{ env.sdk_version }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0.9.9
         with:
@@ -62,10 +56,6 @@ jobs:
       - name: Create Folder
         run: mkdir output
 
-      # - name: Lint Integration
-      #   run: |
-      #     swsdk integration:lint
-
       - name: Validate Integration
         run: |
           swsdk integration:validate -v=${{matrix.PYTHON_VERSION}}
@@ -73,7 +63,3 @@ jobs:
       - name: Build Integration
         run: |
           swsdk integration:build -v=${{matrix.PYTHON_VERSION}}
-
-      - name: Create Dev Bundle
-        if: ${{ steps.gitversion.outputs.preReleaseLabel != '' }}
-        run: find output -name '*.swimbundle' -exec sh -c 'mv "$0" "${0%.swimbundle}.dev.swimbundle"' {} \;
