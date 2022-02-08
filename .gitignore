@@ -5,7 +5,7 @@ dist/
 .idea
 data/
 .DS_Store
-
+*.egg-info/
 __pycache__/
 *.py[cod]
 *$py.class
