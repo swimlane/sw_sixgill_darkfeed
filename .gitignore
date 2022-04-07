@@ -3,7 +3,12 @@ venv/
 output/
 dist/
 .idea
-data/
+# exclude all data files except asset config and template.
+!data/
+data/*
+!data/assetConfig.json
+!data/asset.json.txt
+
 .DS_Store
 *.egg-info/
 __pycache__/
@@ -13,4 +18,4 @@ __pycache__/
 .czrc
 .python-version
 
-data/
+test_output/

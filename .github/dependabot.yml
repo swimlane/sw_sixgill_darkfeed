@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - directory: /
+    open-pull-requests-limit: 5
+    package-ecosystem: pip
+    rebase-strategy: auto
+    schedule:
+      interval: daily
+      time: "09:00" #UTC
+      # Include a list of updated dependencies
+      # with a prefix determined by the dependency group
+    commit-message:
+      prefix: "fix"
+      prefix-development: "chore"
+      include: "scope"

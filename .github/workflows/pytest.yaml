@@ -1,0 +1,75 @@
+name: Pytest
+
+on:
+  pull_request:
+    branches:
+      - main
+env:
+  BW_CLIENTID: ${{ secrets.SWSDK_BW_CLIENTID }}
+  BW_CLIENTSECRET: ${{ secrets.SWSDK_BW_CLIENTSECRET }}
+  BW_USERNAME: "integrations@swimlane.com"
+  BW_PASSWORD: ${{ secrets.SWSDK_BW_PASSWORD }}
+  SWSDK_REPORT_PORTAL_PROJECT: "integrations"
+  SWSDK_REPORT_PORTAL_HOST: "https://reportportal.swimlane.us"
+  sdk_version: "latest"
+
+jobs:
+  build-and-test:
+    name: test
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install BW
+        run: |
+          npm install -g @bitwarden/cli
+
+      - name: Install swsdk
+        run: |
+          npm install -g @swimlane/swimlane-sdk@${{ env.sdk_version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install swsdk Plugins
+        run: |
+          swsdk plugins:install @swimlane/swsdk-bitwarden@${{ env.sdk_version }}
+
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Write Asset File
+        run: |
+          swsdk bitwarden:get-asset --apikey
+
+      - name: Run Tests
+        run: |
+          swsdk integration:test \
+          -v 3.7 \
+          --report-portal \
+          --report-portal-uuid=${{ secrets.SWSDK_REPORT_PORTAL_UUID }} \
+          --report-portal-launch=${{ github.event.repository.name }} \
+          --report-portal-host=${{ env.SWSDK_REPORT_PORTAL_HOST }} \
+          --report-portal-project=${{ env.SWSDK_REPORT_PORTAL_PROJECT }}
+
+      - name: Comment Coverage Report
+        uses: 5monkeys/cobertura-action@master
+        continue-on-error: true
+        with:
+          path: test_output/coverage.xml
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          minimum_coverage: 0
+          only_changed_files: false
+          show_class_names: true
+          show_branch: false
+          show_missing: true
+          skip_covered: false
+          show_line: true
