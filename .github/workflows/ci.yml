@@ -32,9 +32,9 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0.9.9
+        uses: gittools/actions/gitversion/setup@v0.9.13
         with:
-          versionSpec: "5.x"
+          versionSpec: "5.9"
 
       - uses: actions/checkout@v2
         with:
@@ -48,7 +48,7 @@ jobs:
 
       - name: Determine Version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v0.9.9
+        uses: gittools/actions/gitversion/execute@v0.9.13
         with:
           useConfigFile: true
           additionalArguments: "/overrideconfig next-version=${{steps.pjson.outputs.version}}"
